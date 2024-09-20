@@ -151,7 +151,7 @@
 
         function loadData() {
             showLoading();
-            apiRequest('danh_sach_thung', 'Find', { Rows: [], Properties: { Selector: 'Filter(danh_sach_thung, true)' } })
+            apiRequest('nhap_kho_T', 'Find', { Rows: [], Properties: { Selector: 'Filter(nhap_kho_T, true)' } })
                 .then(data => {
                     processData(data);
                     hideLoading();
@@ -167,7 +167,7 @@
             const tableBody = document.getElementById('tableBody');
             tableBody.innerHTML = '';
 
-            const filteredData = data.filter(item => item.id_thung && item.ten_thung);
+            const filteredData = data.filter(item => item.id_thung && item.ten_chi_tiet);
 
             const groupedData = {};
             filteredData.forEach(item => {
@@ -177,7 +177,7 @@
                         ngay_nhan: item.ngay_nhan
                     };
                 }
-                groupedData[item.id_thung].details.push(item.ten_thung);
+                groupedData[item.id_thung].details.push(item.ten_chi_tiet);
             });
 
             filteredData.forEach((item, index) => {
@@ -189,7 +189,7 @@
                 const cellAction = row.insertCell(4);
 
                 cellSTT.textContent = index + 1;
-                cellDetailName.textContent = item.ten_thung;
+                cellDetailName.textContent = item.ten_chi_tiet;
                 cellBoxNumber.textContent = item.id_thung;
 
                 const qrCodeDiv = document.createElement('div');
