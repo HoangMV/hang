@@ -95,7 +95,7 @@
 
 <body>
     <div class="container">
-        <h1 class="text-center my-4">Thông tin thùng hàng từ AppSheet</h1>
+        <h1 id="pageTitle" class="text-center my-4">Thông tin thùng hàng từ AppSheet</h1>
         <div id="loading" class="text-center">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Đang tải...</span>
@@ -157,6 +157,7 @@
                 .then(data => {
                     console.log(data);
                     if (data && data.length > 0) {
+                        updateTitle(id);  // Cập nhật tiêu đề với ID
                         processData(data);
                         const item = data[0];
                         const allDetails = data.map(d => d.order).join(', ');
@@ -273,6 +274,10 @@
             const errorDiv = document.getElementById('error');
             errorDiv.textContent = message;
             errorDiv.style.display = 'block';
+        }
+        function updateTitle(id) {
+            const pageTitle = document.getElementById('pageTitle');
+            pageTitle.textContent = `Thông tin thùng hàng: ${id}`;
         }
 
         window.onload = function () {
