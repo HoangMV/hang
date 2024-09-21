@@ -149,10 +149,16 @@
             });
         }
 
-        function loadData() {
+        function loadData(id) {
             showLoading();
-            apiRequest('nhap_kho_T', 'Find', { Rows: [], Properties: { Selector: 'Filter(nhap_kho_T, true)' } })
+            apiRequest('nhap_kho_T', 'Find', {
+                Rows: [],
+                Properties: {
+                    Selector: `Filter(nhap_kho_T, [ID] = "${id}")` // Sử dụng ID làm tham số
+                }
+            })
                 .then(data => {
+                    console.log(data); // Log dữ liệu để kiểm tra
                     processData(data);
                     hideLoading();
                 })
@@ -167,17 +173,17 @@
             const tableBody = document.getElementById('tableBody');
             tableBody.innerHTML = '';
 
-            const filteredData = data.filter(item => item.id_thung && item.order);
+            const filteredData = data.filter(item => item.ID && item.order);
 
             const groupedData = {};
             filteredData.forEach(item => {
-                if (!groupedData[item.id_thung]) {
-                    groupedData[item.id_thung] = {
+                if (!groupedData[item.ID]) {
+                    groupedData[item.ID] = {
                         details: [],
                         ngay_nhan: item.ngay_nhan
                     };
                 }
-                groupedData[item.id_thung].details.push(item.order);
+                groupedData[item.ID].details.push(item.order);
             });
 
             filteredData.forEach((item, index) => {
@@ -190,13 +196,13 @@
 
                 cellSTT.textContent = index + 1;
                 cellDetailName.textContent = item.order;
-                cellBoxNumber.textContent = item.id_thung;
+                cellBoxNumber.textContent = item.ID;
 
                 const qrCodeDiv = document.createElement('div');
                 qrCodeDiv.className = 'qr-code';
                 cellQRCode.appendChild(qrCodeDiv);
 
-                const qrContent = `${item.ngay_nhan} | ${item.id_thung} | ${groupedData[item.id_thung].details.join(', ')}`;
+                const qrContent = `${item.ngay_nhan} | ${item.ID} | ${groupedData[item.ID].details.join(', ')}`;
 
                 new QRCode(qrCodeDiv, {
                     text: qrContent,
@@ -207,14 +213,14 @@
                 const printButton = document.createElement('button');
                 printButton.textContent = 'In';
                 printButton.className = 'btn btn-primary btn-sm';
-                printButton.onclick = () => printLabel(item, groupedData[item.id_thung].details);
+                printButton.onclick = () => printLabel(item, groupedData[item.ID].details);
                 cellAction.appendChild(printButton);
             });
 
             $('#dataTable').DataTable({
                 language: {
-                        url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/vi.json'
-                    },
+                    url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/vi.json'
+                },
             });
             document.getElementById('dataTable').style.display = 'table';
         }
@@ -234,14 +240,14 @@
             printLabelInfo.className = 'print-label-info';
 
             const labelInfoText = document.createElement('div');
-            labelInfoText.textContent = item.id_thung;
+            labelInfoText.textContent = item.ID;
 
             printLabelInfo.appendChild(labelInfoText);
             printLabel.appendChild(printLabelQr);
             printLabel.appendChild(printLabelInfo);
             printArea.appendChild(printLabel);
 
-            const qrContent = `${item.ngay_nhan} | ${item.id_thung} | ${allDetails.join(', ')}`;
+            const qrContent = `${item.ngay_nhan} | ${item.ID} | ${allDetails.join(', ')}`;
             new QRCode(document.getElementById("printQRCode"), {
                 text: qrContent,
                 width: 72,
@@ -270,7 +276,18 @@
             errorDiv.style.display = 'block';
         }
 
-        window.onload = loadData;
+
+        window.onload = function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const specificId = urlParams.get('ID'); // Lấy giá trị ID từ URL
+
+            if (specificId) {
+                loadData(specificId); // Gọi hàm loadData với ID tìm kiếm
+            } else {
+                showError('ID không được cung cấp trong URL.'); // Hiển thị lỗi nếu không có ID
+            }
+        };
+
     </script>
 </body>
 
