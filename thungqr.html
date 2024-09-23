@@ -83,7 +83,8 @@
                 page-break-after: always;
             }
 
-            #printPreview, #printButton {
+            #printPreview,
+            #printButton {
                 display: none !important;
             }
 
@@ -112,8 +113,7 @@
                 width: auto;
                 height: auto;
             }
-
-            .print-label-info {
+.print-label-info {
                 flex: 1;
                 display: flex;
                 align-items: center;
@@ -132,58 +132,17 @@
     <div id="printArea"></div>
 
     <script>
-        const appId = '36108a99-6538-47a3-9728-1259a0bd98df';
-        const accessKey = 'V2-42Wj9-iT6wO-wMHPB-RB3FE-7o069-jIf4G-5hOAd-pZTIx';
-        const region = 'www';
+       
 
-        function apiRequest(tableName, action, data) {
-            const apiUrl = `https://${region}.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
-            return $.ajax({
-                url: apiUrl,
-                method: 'POST',
-                headers: {
-                    'ApplicationAccessKey': accessKey,
-                    'Content-Type': 'application/json'
-                },
-                data: JSON.stringify({
-                    Action: action,
-                    Properties: {
-                        Locale: 'vi-VN',
-                        Timezone: 'Asia/Ho_Chi_Minh'
-                    },
-                    ...data
-                })
-            });
+
+        function loadData(item,id, allDetails) {
+
+            displayPrintPreview(item,id, allDetails);
+            preparePrintLabel(item,id, allDetails);
+
         }
 
-        function loadData(id) {
-    apiRequest('nhap_kho_T', 'Find', {
-        Rows: [],
-        Properties: {
-            Selector: `Filter(nhap_kho_T, [ID] = "${id}")`
-        }
-    })
-        .then(data => {
-            if (data && data.length > 0) {
-                const item = data[0];
-                const allDetails = data.map(d => d.order).join(', ');
-                displayPrintPreview(item, allDetails);
-                preparePrintLabel(item, allDetails);
-                // Tự động mở cửa sổ in sau khi dữ liệu được tải
-                setTimeout(() => {
-                    window.print();
-                }, 500); // Đợi 500ms để đảm bảo QR code đã được tạo
-            } else {
-                alert('Không tìm thấy dữ liệu cho ID này.');
-            }
-        })
-        .catch(error => {
-            console.error('Lỗi khi tải dữ liệu:', error);
-            alert('Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.');
-        });
-}
-
-        function displayPrintPreview(item, allDetails) {
+        function displayPrintPreview(ngaynhan,id, allDetails) {
             const printPreview = document.getElementById('printPreview');
             printPreview.innerHTML = '';
 
@@ -195,13 +154,13 @@
             printLabelInfo.className = 'print-label-info';
 
             const labelInfoText = document.createElement('div');
-            labelInfoText.textContent = item.ID;
+            labelInfoText.textContent = id;
 
             printLabelInfo.appendChild(labelInfoText);
             printPreview.appendChild(printLabelQr);
             printPreview.appendChild(printLabelInfo);
 
-            const qrContent = `${item.ngay_nhan} | ${item.ID} | ${allDetails}`;
+            const qrContent = `${ngaynhan} | ${id} | ${allDetails}`;
             new QRCode(document.getElementById("previewQRCode"), {
                 text: qrContent,
                 width: 72,
@@ -210,7 +169,7 @@
             });
         }
 
-        function preparePrintLabel(item, allDetails) {
+        function preparePrintLabel(ngaynhan,id, allDetails) {
             const printArea = document.getElementById('printArea');
             printArea.innerHTML = '';
 
@@ -225,14 +184,14 @@
             printLabelInfo.className = 'print-label-info';
 
             const labelInfoText = document.createElement('div');
-            labelInfoText.textContent = item.ID;
+            labelInfoText.textContent = id;
 
             printLabelInfo.appendChild(labelInfoText);
             printLabel.appendChild(printLabelQr);
             printLabel.appendChild(printLabelInfo);
             printArea.appendChild(printLabel);
 
-            const qrContent = `${item.ngay_nhan} | ${item.ID} | ${allDetails}`;
+            const qrContent = `${ngaynhan} | ${id} | ${allDetails}`;
             new QRCode(document.getElementById("printQRCode"), {
                 text: qrContent,
                 width: 72,
@@ -243,15 +202,18 @@
 
         window.onload = function () {
             const urlParams = new URLSearchParams(window.location.search);
-            const specificId = urlParams.get('ID');
-
+const  specificId= urlParams.get('ID');
+            const item = urlParams.get('item');
+            const allDetails = urlParams.get('allDetails');
+       
             if (specificId) {
-                loadData(specificId);
+                loadData(item, specificId, allDetails);
+
             } else {
                 alert('ID không được cung cấp trong URL.');
             }
 
-            document.getElementById('printButton').addEventListener('click', function() {
+            document.getElementById('printButton').addEventListener('click', function () {
                 window.print();
             });
         };
