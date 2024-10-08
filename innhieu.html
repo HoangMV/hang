@@ -169,28 +169,21 @@
         let currentUser = { ho_va_ten: '', code: '' };
 
         function getCurrentUserInfo() {
-            return apiRequest('nhan_vien', 'Find', {
-                Properties: {
-                    Selector: 'Filter(nhan_vien, _CurrentUser = UserEmail())'
-                }
-            })
-                .then(data => {
-                    if (data && data.length > 0) {
-                        currentUser.ho_va_ten = data[0].ho_va_ten || '';
-                        currentUser.code = data[0].code || '';
-                    }
-                })
-                .catch(error => {
-                    console.error('Lỗi khi lấy thông tin người dùng:', error);
-                });
+            const urlParams = new URLSearchParams(window.location.search);
+            currentUser.ho_va_ten = urlParams.get('ho_va_ten') || '';
+            currentUser.code = urlParams.get('code') || '';
+
+            // Giải mã URL encoding cho ho_va_ten
+            currentUser.ho_va_ten = decodeURIComponent(currentUser.ho_va_ten);
+
+            console.log('Thông tin người dùng:', currentUser);
+            return Promise.resolve();
         }
 
         function loadData() {
             showLoading();
-            getCurrentUserInfo()
-                .then(() => {
-                    return apiRequest('in_qr_code', 'Find', { Rows: [], Properties: { Selector: 'Filter(in_qr_code, true)' } });
-                })
+            getCurrentUserInfo();
+            apiRequest('in_qr_code', 'Find', { Rows: [], Properties: { Selector: 'Filter(in_qr_code, true)' } })
                 .then(data => {
                     processData(data);
                     hideLoading();
