@@ -1001,8 +1001,156 @@
             }, 3000);
         }
 
-        function exportReport() {
-            showNotification('Tính năng xuất báo cáo đang được phát triển');
+        // Add SheetJS library to the HTML head
+        const excelScript = document.createElement('script');
+        excelScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        document.head.appendChild(excelScript);
+
+        async function exportReport() {
+            toggleLoading(true);
+            try {
+                if (typeof XLSX === 'undefined') {
+                    await new Promise(resolve => excelScript.onload = resolve);
+                }
+
+                const wb = XLSX.utils.book_new();
+
+                // Sheet 1: Tổng hợp kho
+                const warehouseData = currentData.map(item => ({
+                    'STT': '',
+                    'Số BB nhận': item.so_bien_ban_nhap || '',
+                    'Số BB chuyển': item.so_bien_ban_chuyen_kho || '',
+                    'Số BB xuất': item.so_bien_ban_xuat || '',
+                    'Order KD': item.order_kd || '',
+                    'Tên chi tiết': item.ten_chi_tiet || '',
+                    'Số file': item.so_file || '',
+                    'SLL': item.sll || '',
+                    'Số gói': item.so_goi || '',
+                    'Thời hạn': item.thoi_han || '',
+                    'BBKT': item.bbkt || '',
+                    'Dấu bản vẽ': item.dong_dau_ban_ve || '',
+                    'Xác nhận RC': item.xac_nhan_tu_rc || '',
+                    'Ngày nhập': formatDate(item.Ngay_nhap) || '',
+                    'Thùng': item.ten_thung || '',
+                    'Ngày chuyển': formatDate(item.ngay_chuyen) || '',
+                    'Thùng chuyển': item.thung_chuyen || '',
+                    'Ngày xuất': formatDate(item.ngay_xuat) || '',
+                    'Code': item.code || '',
+                    'Check BBKT': item.check_bbkt || '',
+                    'Check đóng dấu': item.check_dau_ban_ve || '',
+                    'Check xác nhận RC': item.check_xac_nhan_tu_rc || '',
+                    'Trạng thái': item.trang_thai || '',
+                    'Ghi chú': item.ghi_chu || ''
+                }));
+
+                warehouseData.forEach((row, index) => {
+                    row.STT = index + 1;
+                });
+
+                const ws1 = XLSX.utils.json_to_sheet(warehouseData);
+
+                // Sheet 2: Tổng hợp đơn hàng đã nhận
+                const receivedOrders = currentData.filter(item => item.trang_thai === 'Đã nhận');
+
+                // Tạo map để đếm và theo dõi vị trí đầu tiên của mỗi ten_chi_tiet
+                const detailCounts = new Map(); // Đếm số lần xuất hiện
+                const firstOccurrence = new Map(); // Lưu vị trí xuất hiện đầu tiên
+
+                receivedOrders.forEach((item, index) => {
+                    const count = (detailCounts.get(item.ten_chi_tiet) || 0) + 1;
+                    detailCounts.set(item.ten_chi_tiet, count);
+
+                    // Chỉ lưu vị trí đầu tiên
+                    if (!firstOccurrence.has(item.ten_chi_tiet)) {
+                        firstOccurrence.set(item.ten_chi_tiet, index);
+                    }
+                });
+
+                const processedReceivedOrders = receivedOrders.map((item, currentIndex) => {
+                    // Chỉ hiện thị số lượng ở dòng đầu tiên của mỗi ten_chi_tiet
+                    const totalCount = detailCounts.get(item.ten_chi_tiet);
+                    const isFirstOccurrence = firstOccurrence.get(item.ten_chi_tiet) === currentIndex;
+
+                    return {
+                        'STT': '',
+                        'Tên chi tiết': item.ten_chi_tiet || '',
+                        'Số lượng sản phẩm': item.sll || '',
+                        'Số lượng đơn hàng': isFirstOccurrence ? totalCount.toString() : '',
+                        'Số lượng chi tiết': isFirstOccurrence ? '1' : '',
+                        'Ngày nhập': formatDate(item.Ngay_nhap) || ''
+                    };
+                });
+
+                processedReceivedOrders.forEach((row, index) => {
+                    row.STT = index + 1;
+                });
+
+                const ws2 = XLSX.utils.json_to_sheet(processedReceivedOrders);
+
+                // Sheet 3: Thống kê theo tháng
+                const monthlyStats = {};
+                currentData.forEach(item => {
+                    if (item.Ngay_nhap) {
+                        const date = new Date(item.Ngay_nhap);
+                        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+                        if (!monthlyStats[monthKey]) {
+                            monthlyStats[monthKey] = {
+                                'Tháng': `${date.getMonth() + 1}/${date.getFullYear()}`,
+                                'Tổng số lượng': 0,
+                                'Số đơn hàng': 0,
+                                'Số chi tiết': new Set()
+                            };
+                        }
+
+                        monthlyStats[monthKey]['Tổng số lượng'] += parseInt(item.sll) || 0;
+                        monthlyStats[monthKey]['Số đơn hàng']++;
+                        monthlyStats[monthKey]['Số chi tiết'].add(item.ten_chi_tiet);
+                    }
+                });
+
+                const monthlyData = Object.values(monthlyStats).map(stat => ({
+                    'Tháng': stat['Tháng'],
+                    'Tổng số lượng': stat['Tổng số lượng'],
+                    'Số đơn hàng': stat['Số đơn hàng'],
+                    'Số chi tiết': stat['Số chi tiết'].size
+                }));
+
+                const ws3 = XLSX.utils.json_to_sheet(monthlyData);
+
+                // Add sheets to workbook
+                XLSX.utils.book_append_sheet(wb, ws1, 'Tổng hợp kho');
+                XLSX.utils.book_append_sheet(wb, ws2, 'Tổng hợp đơn hàng đã nhận');
+                XLSX.utils.book_append_sheet(wb, ws3, 'Thống kê theo tháng');
+
+                // Auto-size columns for all sheets
+                const sheets = ['Tổng hợp kho', 'Tổng hợp đơn hàng đã nhận', 'Thống kê theo tháng'];
+                sheets.forEach(sheet => {
+                    const ws = wb.Sheets[sheet];
+                    const range = XLSX.utils.decode_range(ws['!ref']);
+                    for (let C = range.s.c; C <= range.e.c; ++C) {
+                        let max_width = 10;
+                        for (let R = range.s.r; R <= range.e.r; ++R) {
+                            const cell = ws[XLSX.utils.encode_cell({ r: R, c: C })];
+                            if (cell && cell.v) {
+                                const text = cell.v.toString();
+                                const width = text.length * 1.2;
+                                if (width > max_width) max_width = width;
+                            }
+                        }
+                        ws['!cols'] = ws['!cols'] || [];
+                        ws['!cols'][C] = { wch: max_width };
+                    }
+                });
+
+                XLSX.writeFile(wb, `Báo cáo kho ${formatDate(new Date())}.xlsx`);
+                showNotification('Xuất báo cáo thành công');
+            } catch (error) {
+                console.error('Error exporting report:', error);
+                showNotification('Có lỗi khi xuất báo cáo. Vui lòng thử lại.', 'error');
+            } finally {
+                toggleLoading(false);
+            }
         }
 
         // Initial page setup
