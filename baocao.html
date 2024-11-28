@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Báo Cáo Kho</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <style>
         @media (max-width: 768px) {
             .table-container {
@@ -143,6 +143,12 @@
             background: white;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
+
+        .date-preset-btn.active {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
     </style>
 </head>
 
@@ -169,15 +175,98 @@
             </div>
 
             <div class="space-y-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Thời gian nhập</label>
-                    <select id="timeFilter"
-                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-                        <option value="all">Tất cả</option>
-                        <option value="today">Hôm nay</option>
-                        <option value="week">Tuần này</option>
-                        <option value="month">Tháng này</option>
-                    </select>
+                <!-- Date Range Picker -->
+                <div class="space-y-4">
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" data-range="today"
+                            class="date-preset-btn px-3 py-2 text-sm rounded-lg border transition-all hover:bg-blue-50">
+                            Hôm nay
+                        </button>
+                        <button type="button" data-range="yesterday"
+                            class="date-preset-btn px-3 py-2 text-sm rounded-lg border transition-all hover:bg-blue-50">
+                            Hôm qua
+                        </button>
+                        <button type="button" data-range="thisWeek"
+                            class="date-preset-btn px-3 py-2 text-sm rounded-lg border transition-all hover:bg-blue-50">
+                            Tuần này
+                        </button>
+                        <button type="button" data-range="lastWeek"
+                            class="date-preset-btn px-3 py-2 text-sm rounded-lg border transition-all hover:bg-blue-50">
+                            Tuần trước
+                        </button>
+                        <button type="button" data-range="thisMonth"
+                            class="date-preset-btn px-3 py-2 text-sm rounded-lg border transition-all hover:bg-blue-50">
+                            Tháng này
+                        </button>
+                        <button type="button" data-range="lastMonth"
+                            class="date-preset-btn px-3 py-2 text-sm rounded-lg border transition-all hover:bg-blue-50">
+                            Tháng trước
+                        </button>
+                        <button type="button" data-range="last30Days"
+                            class="date-preset-btn px-3 py-2 text-sm rounded-lg border transition-all hover:bg-blue-50">
+                            30 ngày qua
+                        </button>
+                        <button type="button" data-range="last90Days"
+                            class="date-preset-btn px-3 py-2 text-sm rounded-lg border transition-all hover:bg-blue-50">
+                            90 ngày qua
+                        </button>
+                    </div>
+
+                    <div class="relative">
+                        <button id="dateRangeBtn"
+                            class="w-full p-3 text-left border rounded-lg flex justify-between items-center hover:bg-gray-50 transition-all">
+                            <span id="dateRangeText">Chọn khoảng thời gian</span>
+                            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </button>
+
+                        <div id="dateRangePicker"
+                            class="hidden absolute left-0 right-0 mt-2 p-4 bg-white rounded-lg shadow-xl border z-50">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Từ ngày</label>
+                                    <input type="date" id="startDate"
+                                        class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Đến ngày</label>
+                                    <input type="date" id="endDate"
+                                        class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                            </div>
+
+                            <div class="mt-4 flex justify-between items-center">
+                                <button type="button" id="clearDates" class="text-sm text-gray-600 hover:text-gray-900">
+                                    Xóa
+                                </button>
+                                <button type="button" id="applyDateRange"
+                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                    Áp dụng
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="selectedDateRange" class="hidden">
+                        <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                            <div class="flex items-center space-x-2">
+                                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <span id="selectedDateRangeText" class="text-sm text-blue-700"></span>
+                            </div>
+                            <button type="button" id="clearSelectedRange" class="text-blue-600 hover:text-blue-800">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div>
@@ -366,60 +455,219 @@
         let currentResizer = null;
         let initialX = 0;
         let initialWidth = 0;
+        let currentDateRange = {
+            start: null,
+            end: null,
+            preset: null
+        };
 
         // Loading indicator functions
         function toggleLoading(show) {
             document.getElementById('loading').classList.toggle('hidden', !show);
         }
 
-        // Statistics functions
-        function updateStatistics(data) {
-            const timeFilter = document.getElementById('timeFilter').value;
+        // Date Range Picker functions
+        function initializeDatePicker() {
+            const dateRangeBtn = document.getElementById('dateRangeBtn');
+            const dateRangePicker = document.getElementById('dateRangePicker');
+            const startDate = document.getElementById('startDate');
+            const endDate = document.getElementById('endDate');
+            const applyDateRange = document.getElementById('applyDateRange');
+            const clearDates = document.getElementById('clearDates');
+            const clearSelectedRange = document.getElementById('clearSelectedRange');
+
+            // Click bên ngoài để đóng date picker
+            document.addEventListener('click', (e) => {
+                if (!dateRangePicker.contains(e.target) && !dateRangeBtn.contains(e.target)) {
+                    dateRangePicker.classList.add('hidden');
+                }
+            });
+
+            // Toggle date picker
+            dateRangeBtn.addEventListener('click', () => {
+                dateRangePicker.classList.toggle('hidden');
+            });
+
+            // Xử lý các preset buttons
+            document.querySelectorAll('.date-preset-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Remove active class from all buttons
+                    document.querySelectorAll('.date-preset-btn').forEach(b =>
+                        b.classList.remove('active'));
+
+                    // Add active class to clicked button
+                    btn.classList.add('active');
+
+                    const range = btn.dataset.range;
+                    const dates = getPresetDates(range);
+                    setDateRange(dates.start, dates.end, range);
+                    applyFilters();
+                });
+            });
+
+            // Apply custom date range
+            applyDateRange.addEventListener('click', () => {
+                if (startDate.value && endDate.value) {
+                    // Remove active class from all preset buttons when custom range is applied
+                    document.querySelectorAll('.date-preset-btn').forEach(btn =>
+                        btn.classList.remove('active'));
+
+                    setDateRange(new Date(startDate.value), new Date(endDate.value), 'custom');
+                    dateRangePicker.classList.add('hidden');
+                    applyFilters();
+                }
+            });
+
+            // Clear dates
+            clearDates.addEventListener('click', () => {
+                startDate.value = '';
+                endDate.value = '';
+            });
+
+            // Clear selected range
+            clearSelectedRange.addEventListener('click', () => {
+                // Remove active class from all preset buttons
+                document.querySelectorAll('.date-preset-btn').forEach(btn =>
+                    btn.classList.remove('active'));
+
+                clearDateRange();
+                applyFilters();
+            });
+
+            // Set default to "Hôm nay"
+            const todayBtn = document.querySelector('[data-range="today"]');
+            if (todayBtn) {
+                todayBtn.click();
+            }
+        }
+
+        function getPresetDates(preset) {
             const now = new Date();
             const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-            // Xác định khoảng thời gian dựa theo bộ lọc
-            let startDate, endDate;
-
-            switch (timeFilter) {
-                case 'all':
-                    // Không cần startDate và endDate cho "Tất cả"
-                    break;
+            switch (preset) {
                 case 'today':
-                    startDate = today;
-                    endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
-                    break;
-                case 'week':
-                    startDate = new Date(today);
-                    startDate.setDate(today.getDate() - today.getDay());
-                    endDate = new Date(now);
-                    break;
-                case 'month':
-                    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-                    endDate = new Date(now);
-                    break;
+                    return {
+                        start: today,
+                        end: now
+                    };
+                case 'yesterday': {
+                    const yesterday = new Date(today);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    return {
+                        start: yesterday,
+                        end: new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 23, 59, 59)
+                    };
+                }
+                case 'thisWeek': {
+                    const weekStart = new Date(today);
+                    weekStart.setDate(today.getDate() - today.getDay());
+                    return {
+                        start: weekStart,
+                        end: now
+                    };
+                }
+                case 'lastWeek': {
+                    const lastWeekStart = new Date(today);
+                    lastWeekStart.setDate(today.getDate() - today.getDay() - 7);
+                    const lastWeekEnd = new Date(today);
+                    lastWeekEnd.setDate(today.getDate() - today.getDay() - 1);
+                    lastWeekEnd.setHours(23, 59, 59);
+                    return {
+                        start: lastWeekStart,
+                        end: lastWeekEnd
+                    };
+                }
+                case 'thisMonth':
+                    return {
+                        start: new Date(today.getFullYear(), today.getMonth(), 1),
+                        end: now
+                    };
+                case 'lastMonth': {
+                    const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0, 23, 59, 59);
+                    return {
+                        start: lastMonthStart,
+                        end: lastMonthEnd
+                    };
+                }
+                case 'last30Days': {
+                    const thirtyDaysAgo = new Date(today);
+                    thirtyDaysAgo.setDate(today.getDate() - 30);
+                    return {
+                        start: thirtyDaysAgo,
+                        end: now
+                    };
+                }
+                case 'last90Days': {
+                    const ninetyDaysAgo = new Date(today);
+                    ninetyDaysAgo.setDate(today.getDate() - 90);
+                    return {
+                        start: ninetyDaysAgo,
+                        end: now
+                    };
+                }
                 default:
-                    // Mặc định là hôm nay
-                    startDate = today;
-                    endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+                    return {
+                        start: null,
+                        end: null
+                    };
             }
+        }
 
+        // Date Range Functions
+        function setDateRange(start, end, preset) {
+            currentDateRange = { start, end, preset };
+            updateDateRangeDisplay();
+        }
+
+        function clearDateRange() {
+            currentDateRange = { start: null, end: null, preset: null };
+            updateDateRangeDisplay();
+        }
+
+        function updateDateRangeDisplay() {
+            const selectedDateRange = document.getElementById('selectedDateRange');
+            const selectedDateRangeText = document.getElementById('selectedDateRangeText');
+            const dateRangeText = document.getElementById('dateRangeText');
+
+            if (currentDateRange.start && currentDateRange.end) {
+                const formatDate = (date) => {
+                    return date.toLocaleDateString('vi-VN', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    });
+                };
+
+                const rangeText = `${formatDate(currentDateRange.start)} - ${formatDate(currentDateRange.end)}`;
+                selectedDateRangeText.textContent = rangeText;
+                dateRangeText.textContent = rangeText;
+                selectedDateRange.classList.remove('hidden');
+            } else {
+                dateRangeText.textContent = 'Chọn khoảng thời gian';
+                selectedDateRange.classList.add('hidden');
+            }
+        }
+
+        // Statistics functions
+        function updateStatistics(data) {
             const stats = {
                 totalProducts: new Set(data.map(item => item.ten_chi_tiet)).size,
                 totalQuantity: data.reduce((sum, item) => sum + (parseInt(item.sll) || 0), 0),
                 totalImport: data.reduce((sum, item) => {
                     const ngayNhan = item.Ngay_nhap ? new Date(item.Ngay_nhap) : null;
 
-                    // Nếu là "Tất cả" thì tính hết
-                    if (timeFilter === 'all') {
-                        return sum + (parseInt(item.sll) || 0);
+                    // Nếu có thời gian được chọn thì lọc theo thời gian
+                    if (currentDateRange.start && currentDateRange.end && ngayNhan) {
+                        if (ngayNhan >= currentDateRange.start && ngayNhan <= currentDateRange.end) {
+                            return sum + (parseInt(item.sll) || 0);
+                        }
+                        return sum;
                     }
 
-                    // Các trường hợp lọc theo thời gian
-                    if (ngayNhan && ngayNhan >= startDate && ngayNhan <= endDate) {
-                        return sum + (parseInt(item.sll) || 0);
-                    }
-                    return sum;
+                    // Nếu không có thời gian được chọn thì tính tất cả
+                    return sum + (parseInt(item.sll) || 0);
                 }, 0),
                 totalExport: data.reduce((sum, item) => {
                     if (item.so_bien_ban_xuat && item.trang_thai === 'Đã xuất') {
@@ -427,13 +675,13 @@
                     }
                     return sum;
                 }, 0),
-                // Tính tổng tồn 
-                totalRemaining: 0 // Giá trị ban đầu, sẽ được cập nhật ngay sau khi tạo object
+                totalRemaining: 0 // Sẽ được tính sau
             };
 
             // Cập nhật totalRemaining sau khi đã tính toàn bộ các giá trị khác
             stats.totalRemaining = stats.totalQuantity - stats.totalExport;
 
+            // Animate số liệu thống kê
             Object.keys(stats).forEach(key => {
                 const element = document.getElementById(key);
                 const value = stats[key];
@@ -461,7 +709,7 @@
             }, duration / steps);
         }
 
-        // Populate filters
+        // Filter functions
         function populateFilters() {
             populateStatusFilter();
             populatePriceFilter();
@@ -493,16 +741,72 @@
             });
         }
 
-        // Reset filters
+        // Filter application
+        function applyFilters() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const priceFilter = document.getElementById('priceFilter').value;
+
+            filteredData = currentData.filter(item => {
+                let matchesFilters = true;
+
+                // Lọc theo thời gian
+                if (currentDateRange.start && currentDateRange.end) {
+                    const itemDate = new Date(item.Ngay_nhap);
+                    matchesFilters = matchesFilters &&
+                        itemDate >= currentDateRange.start &&
+                        itemDate <= currentDateRange.end;
+                }
+
+                // Lọc theo trạng thái
+                if (statusFilter !== 'all') {
+                    matchesFilters = matchesFilters && item.trang_thai === statusFilter;
+                }
+
+                // Lọc theo giá
+                if (priceFilter !== 'all') {
+                    matchesFilters = matchesFilters && item.gia === priceFilter;
+                }
+
+                return matchesFilters;
+            });
+
+            currentPage = 1;
+            updateTable();
+            updateStatistics(filteredData);
+            toggleFilter();
+        }
+
         function resetFilters() {
-            document.getElementById('timeFilter').value = 'all';
+            // Remove active class from all preset buttons
+            document.querySelectorAll('.date-preset-btn').forEach(btn =>
+                btn.classList.remove('active'));
+
             document.getElementById('statusFilter').value = 'all';
             document.getElementById('priceFilter').value = 'all';
+            clearDateRange();
 
             filteredData = [...currentData];
             currentPage = 1;
             updateTable();
             updateStatistics(filteredData);
+        }
+
+        function toggleFilter() {
+            const panel = document.getElementById('filterPanel');
+            panel.classList.toggle('hidden');
+
+            let overlay = document.getElementById('filterOverlay');
+            if (!panel.classList.contains('hidden')) {
+                if (!overlay) {
+                    overlay = document.createElement('div');
+                    overlay.id = 'filterOverlay';
+                    overlay.className = 'fixed inset-0 bg-black bg-opacity-50 z-40';
+                    overlay.onclick = toggleFilter;
+                    document.body.appendChild(overlay);
+                }
+            } else if (overlay) {
+                overlay.remove();
+            }
         }
 
         // Table functions
@@ -535,38 +839,6 @@
 
             updatePagination();
             initializeResizers();
-        }
-
-        // Apply filters
-        function applyFilters() {
-            const timeFilter = document.getElementById('timeFilter').value;
-            const statusFilter = document.getElementById('statusFilter').value;
-            const priceFilter = document.getElementById('priceFilter').value;
-
-            filteredData = currentData.filter(item => {
-                let matchesFilters = true;
-
-                if (timeFilter !== 'all') {
-                    const itemDate = new Date(item.Ngay_nhap);
-                    const filterDates = getTimeFilterDates(timeFilter);
-                    matchesFilters = matchesFilters && itemDate >= filterDates.start && itemDate <= filterDates.end;
-                }
-
-                if (statusFilter !== 'all') {
-                    matchesFilters = matchesFilters && item.trang_thai === statusFilter;
-                }
-
-                if (priceFilter !== 'all') {
-                    matchesFilters = matchesFilters && item.gia === priceFilter;
-                }
-
-                return matchesFilters;
-            });
-
-            currentPage = 1;
-            updateTable();
-            updateStatistics(filteredData);
-            toggleFilter();
         }
 
         // Pagination functions
@@ -696,78 +968,52 @@
             }, 3000);
         }
 
-        function getTimeFilterDates(filter) {
-            const now = new Date();
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-            switch (filter) {
-                case 'all':
-                    // Khi chọn "Tất cả" - không giới hạn thời gian
-                    return null;
-                case 'today':
-                    return {
-                        start: today,
-                        end: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999)
-                    };
-                case 'week':
-                    const weekStart = new Date(today);
-                    weekStart.setDate(today.getDate() - today.getDay());
-                    return {
-                        start: weekStart,
-                        end: now
-                    };
-                case 'month':
-                    return {
-                        start: new Date(today.getFullYear(), today.getMonth(), 1),
-                        end: now
-                    };
-                default:
-                    // Mặc định là ngày hiện tại
-                    return {
-                        start: today,
-                        end: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999)
-                    };
-            }
-        }
-
-        function toggleFilter() {
-            const panel = document.getElementById('filterPanel');
-            panel.classList.toggle('hidden');
-
-            let overlay = document.getElementById('filterOverlay');
-            if (!panel.classList.contains('hidden')) {
-                if (!overlay) {
-                    overlay = document.createElement('div');
-                    overlay.id = 'filterOverlay';
-                    overlay.className = 'fixed inset-0 bg-black bg-opacity-50 z-40';
-                    overlay.onclick = toggleFilter;
-                    document.body.appendChild(overlay);
-                }
-            } else if (overlay) {
-                overlay.remove();
-            }
-        }
-
         function exportReport() {
             showNotification('Tính năng xuất báo cáo đang được phát triển');
         }
 
-        // Initialize
+        // Initial page setup
         document.addEventListener('DOMContentLoaded', () => {
+            // Page size change handler
+            document.getElementById('pageSizeSelect').addEventListener('change', (e) => {
+                pageSize = parseInt(e.target.value);
+                currentPage = 1;
+                updateTable();
+            });
+
+            // Pagination navigation handlers
+            document.getElementById('prevPage').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    goToPage(currentPage - 1);
+                }
+            });
+
+            document.getElementById('nextPage').addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    goToPage(currentPage + 1);
+                }
+            });
+
             fetchInventoryData();
             initializeResizers();
         });
 
-        // Khởi tạo ban đầu - gọi sau khi load dữ liệu
         function initializePage() {
-            // Set giá trị mặc định cho bộ lọc là "Hôm nay"
-            document.getElementById('timeFilter').value = 'today';
+            // Khởi tạo các giá trị mặc định
+            currentPage = 1;
+            pageSize = 10;
 
-            // Cập nhật thống kê với dữ liệu ban đầu
+            // Khởi tạo page size select
+            const pageSizeSelect = document.getElementById('pageSizeSelect');
+            if (pageSizeSelect) {
+                pageSizeSelect.value = pageSize;
+            }
+
+            // Cập nhật thống kê ban đầu
             updateStatistics(currentData);
         }
 
-        // Data fetching with filter population
+        // Data fetching
         async function fetchInventoryData() {
             toggleLoading(true);
             try {
@@ -793,8 +1039,10 @@
 
                 currentData = await response.json();
                 filteredData = [...currentData];
-                populateFilters(); // Populate all filters
-                initializePage(); // Gọi hàm khởi tạo
+
+                populateFilters();
+                initializePage();
+                initializeDatePicker();
                 updateTable();
                 updateStatistics(filteredData);
             } catch (error) {
