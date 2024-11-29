@@ -144,6 +144,49 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
+        /* Thêm/chỉnh sửa CSS cho bộ lọc ngày */
+        .flex.flex-wrap.gap-2 {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding-bottom: 5px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        /* Cho phép hover để cuộn */
+        .flex.flex-wrap.gap-2:hover {
+            overflow-x: scroll;
+            cursor: pointer;
+        }
+
+        /* Ẩn thanh cuộn nhưng vẫn giữ chức năng cuộn */
+        .flex.flex-wrap.gap-2::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .flex.flex-wrap.gap-2::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .flex.flex-wrap.gap-2::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        /* Điều chỉnh kích thước nút để vừa một dòng */
+        .date-preset-btn {
+            flex: 0 0 auto;
+            /* Không co giãn, giữ kích thước tự nhiên */
+            white-space: nowrap;
+            /* Ngăn text xuống dòng */
+            padding: 0.5rem 1rem;
+            /* Giảm padding để nút nhỏ hơn */
+            font-size: 0.875rem;
+            /* Giảm kích thước chữ nếu cần */
+        }
+
         .date-preset-btn.active {
             background-color: #3b82f6;
             color: white;
@@ -300,6 +343,25 @@
                     </div>
                 </div>
 
+                <!-- Search Section -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">Tìm kiếm</label>
+                    <div class="relative">
+                        <input type="text" id="searchInput" placeholder="Tìm theo tên chi tiết hoặc mã order..."
+                            class="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </span>
+                    </div>
+                    <!-- Search Results Count -->
+                    <div id="searchResultsCount" class="text-sm text-gray-600 hidden">
+                        Tìm thấy <span class="font-medium">0</span> kết quả
+                    </div>
+                </div>
+
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
                     <select id="statusFilter"
@@ -311,10 +373,46 @@
                 <!-- Price Category Filter -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Giá</label>
-                    <select id="priceFilter"
-                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-                        <option value="all">Tất cả</option>
-                    </select>
+                    <div class="relative">
+                        <button type="button" id="priceFilterBtn"
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-left bg-white flex justify-between items-center">
+                            <span id="priceFilterText">Tất cả</span>
+                            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <div id="priceDropdown"
+                            class="hidden absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                            <div class="p-2 max-h-60 overflow-y-auto">
+                                <!-- Chọn tất cả -->
+                                <div class="flex items-center p-2 hover:bg-gray-50 rounded">
+                                    <input type="checkbox" id="selectAllPrices"
+                                        class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                    <label for="selectAllPrices" class="ml-2 text-sm text-gray-700">Chọn tất cả</label>
+                                </div>
+
+                                <div class="border-t my-2"></div>
+
+                                <!-- Container cho các checkbox giá -->
+                                <div id="priceOptions" class="space-y-1">
+                                    <!-- Các checkbox sẽ được thêm vào đây qua JavaScript -->
+                                </div>
+                            </div>
+
+                            <div class="border-t p-2 flex justify-end space-x-2">
+                                <button type="button" id="clearPrices"
+                                    class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 rounded">
+                                    Xóa chọn
+                                </button>
+                                <button type="button" id="applyPrices"
+                                    class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
+                                    Áp dụng
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="space-y-3">
@@ -471,6 +569,26 @@
     </main>
 
     <script>
+
+        document.addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+        }, false);
+
+        document.onkeydown = function (e) {
+            if (e.keyCode == 123) {
+                return false;
+            }
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) {
+                return false;
+            }
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) {
+                return false;
+            }
+            if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) {
+                return false;
+            }
+        };
+
         // Configuration
         const config = {
             appId: '36108a99-6538-47a3-9728-1259a0bd98df',
@@ -536,6 +654,12 @@
                     setDateRange(dates.start, dates.end, range);
                     applyFilters();
                 });
+            });
+
+            // Thêm đoạn code này vào phần script của bạn
+            document.querySelector('.flex.flex-wrap.gap-2').addEventListener('wheel', function (e) {
+                e.preventDefault();  // Ngăn cuộn dọc mặc định
+                this.scrollLeft += e.deltaY;  // Chuyển cuộn dọc thành cuộn ngang
             });
 
             // Apply custom date range
@@ -761,28 +885,122 @@
             });
         }
 
-        function populatePriceFilter() {
-            const priceFilter = document.getElementById('priceFilter');
-            const uniquePrices = [...new Set(currentData.map(item => item.gia))].filter(Boolean);
+        // Thêm biến để lưu trữ giá đã chọn
+        let selectedPrices = new Set();
 
-            priceFilter.innerHTML = '<option value="all">Tất cả</option>';
-            uniquePrices.forEach(price => {
-                const option = document.createElement('option');
-                option.value = price;
-                option.textContent = price;
-                priceFilter.appendChild(option);
+        // Cập nhật hàm populatePriceFilter
+        function populatePriceFilter() {
+            const priceOptions = document.getElementById('priceOptions');
+            const uniquePrices = [...new Set(currentData.map(item => item.gia))].filter(Boolean).sort();
+
+            // Tạo các checkbox cho từng giá
+            priceOptions.innerHTML = uniquePrices.map(price => `
+        <div class="flex items-center p-2 hover:bg-gray-50 rounded">
+            <input type="checkbox" id="price-${price}" value="${price}" 
+                class="price-checkbox w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+            <label for="price-${price}" class="ml-2 text-sm text-gray-700">${price}</label>
+        </div>
+    `).join('');
+
+            // Thêm các event listeners
+            setupPriceFilterEvents();
+        }
+
+        function setupPriceFilterEvents() {
+            const priceFilterBtn = document.getElementById('priceFilterBtn');
+            const priceDropdown = document.getElementById('priceDropdown');
+            const selectAllCheckbox = document.getElementById('selectAllPrices');
+            const clearBtn = document.getElementById('clearPrices');
+            const applyBtn = document.getElementById('applyPrices');
+            const priceCheckboxes = document.querySelectorAll('.price-checkbox');
+
+            // Toggle dropdown
+            priceFilterBtn.addEventListener('click', () => {
+                priceDropdown.classList.toggle('hidden');
+            });
+
+            // Đóng dropdown khi click bên ngoài
+            document.addEventListener('click', (e) => {
+                if (!priceDropdown.contains(e.target) && !priceFilterBtn.contains(e.target)) {
+                    priceDropdown.classList.add('hidden');
+                }
+            });
+
+            // Xử lý chọn tất cả
+            selectAllCheckbox.addEventListener('change', (e) => {
+                priceCheckboxes.forEach(checkbox => {
+                    checkbox.checked = e.target.checked;
+                    if (e.target.checked) {
+                        selectedPrices.add(checkbox.value);
+                    } else {
+                        selectedPrices.delete(checkbox.value);
+                    }
+                });
+                updatePriceFilterText();
+            });
+
+            // Xử lý từng checkbox
+            priceCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        selectedPrices.add(e.target.value);
+                    } else {
+                        selectedPrices.delete(e.target.value);
+                        selectAllCheckbox.checked = false;
+                    }
+                    updatePriceFilterText();
+                });
+            });
+
+            // Xử lý nút clear
+            clearBtn.addEventListener('click', () => {
+                selectedPrices.clear();
+                selectAllCheckbox.checked = false;
+                priceCheckboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                updatePriceFilterText();
+            });
+
+            // Xử lý nút apply
+            applyBtn.addEventListener('click', () => {
+                priceDropdown.classList.add('hidden');
+                applyFilters();
             });
         }
 
-        // Filter application
-        function applyFilters() {
-            const statusFilter = document.getElementById('statusFilter').value;
-            const priceFilter = document.getElementById('priceFilter').value;
+        function updatePriceFilterText() {
+            const priceFilterText = document.getElementById('priceFilterText');
+            if (selectedPrices.size === 0) {
+                priceFilterText.textContent = 'Tất cả';
+            } else if (selectedPrices.size === 1) {
+                priceFilterText.textContent = [...selectedPrices][0];
+            } else {
+                priceFilterText.textContent = `${selectedPrices.size} giá đã chọn`;
+            }
+        }
 
+        // Add these variables at the top with other variables
+        let searchQuery = '';
+
+        // Add this function to handle search
+        function handleSearch(query) {
+            searchQuery = query.toLowerCase().trim();
+            applyFilters();
+        }
+
+        // Update the applyFilters function
+        function applyFilters() {
+            // Get filter values
+            const statusFilter = document.getElementById('statusFilter').value;
+            const searchResultsCount = document.getElementById('searchResultsCount');
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            // Filter the data
             filteredData = currentData.filter(item => {
                 let matchesFilters = true;
 
-                // Lọc theo thời gian
+                // Date range filter
                 if (currentDateRange.start && currentDateRange.end) {
                     const itemDate = new Date(item.Ngay_nhap);
                     matchesFilters = matchesFilters &&
@@ -790,38 +1008,99 @@
                         itemDate <= currentDateRange.end;
                 }
 
-                // Lọc theo trạng thái
+                // Status filter
                 if (statusFilter !== 'all') {
                     matchesFilters = matchesFilters && item.trang_thai === statusFilter;
                 }
 
-                // Lọc theo giá
-                if (priceFilter !== 'all') {
-                    matchesFilters = matchesFilters && item.gia === priceFilter;
+                // Price filter
+                if (selectedPrices.size > 0) {
+                    matchesFilters = matchesFilters && selectedPrices.has(item.gia);
+                }
+
+                // Search filter
+                if (searchQuery) {
+                    const matchesSearch = (
+                        (item.ten_chi_tiet || '').toLowerCase().includes(searchQuery) ||
+                        (item.order_kd || '').toLowerCase().includes(searchQuery) ||
+                        (item.so_file || '').toString().toLowerCase().includes(searchQuery) ||
+                        (item.so_goi || '').toString().toLowerCase().includes(searchQuery) ||
+                        (item.ten_thung || '').toLowerCase().includes(searchQuery) ||
+                        (item.code || '').toLowerCase().includes(searchQuery)
+                    );
+                    matchesFilters = matchesFilters && matchesSearch;
                 }
 
                 return matchesFilters;
             });
 
+            // Update search results count
+            if (searchQuery) {
+                searchResultsCount.classList.remove('hidden');
+                searchResultsCount.querySelector('span').textContent = filteredData.length;
+            } else {
+                searchResultsCount.classList.add('hidden');
+            }
+
+            // Reset to first page
             currentPage = 1;
+
+            // Update UI
             updateTable();
             updateStatistics(filteredData);
-            toggleFilter();
+
+            // Close filter panel after applying filters
+            const filterPanel = document.getElementById('filterPanel');
+            if (!filterPanel.classList.contains('hidden')) {
+                toggleFilter();
+            }
+
+            // Show notification
+            showNotification('Đã áp dụng bộ lọc');
         }
 
         function resetFilters() {
-            // Remove active class from all preset buttons
+            // Reset date range and remove active class from preset buttons
             document.querySelectorAll('.date-preset-btn').forEach(btn =>
                 btn.classList.remove('active'));
-
-            document.getElementById('statusFilter').value = 'all';
-            document.getElementById('priceFilter').value = 'all';
             clearDateRange();
 
+            // Reset status filter
+            document.getElementById('statusFilter').value = 'all';
+
+            // Reset price filter
+            selectedPrices.clear();
+            document.querySelectorAll('.price-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            document.getElementById('selectAllPrices').checked = false;
+            updatePriceFilterText();
+
+            // Reset filter panel display
+            const dateRangeText = document.getElementById('dateRangeText');
+            if (dateRangeText) {
+                dateRangeText.textContent = 'Chọn khoảng thời gian';
+            }
+
+            const selectedDateRange = document.getElementById('selectedDateRange');
+            if (selectedDateRange) {
+                selectedDateRange.classList.add('hidden');
+            }
+
+            // Reset data and update display
+            currentDateRange = { start: null, end: null, preset: null };
             filteredData = [...currentData];
             currentPage = 1;
+
+            // Update UI
             updateTable();
             updateStatistics(filteredData);
+
+            // Close filter panel
+            const filterPanel = document.getElementById('filterPanel');
+            if (!filterPanel.classList.contains('hidden')) {
+                toggleFilter();
+            }
         }
 
         function toggleFilter() {
@@ -1155,6 +1434,34 @@
 
         // Initial page setup
         document.addEventListener('DOMContentLoaded', () => {
+
+            // Add click handler for apply filters button
+            const applyFiltersButton = document.querySelector('button[onclick="applyFilters()"]');
+            if (applyFiltersButton) {
+                applyFiltersButton.addEventListener('click', applyFilters);
+            }
+            // Initialize search functionality
+            const searchInput = document.getElementById('searchInput');
+            let searchTimeout;
+
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    handleSearch(e.target.value);
+                }, 300); // Debounce search for better performance
+            });
+
+            // Add search input clear when resetting filters
+            const originalResetFilters = resetFilters;
+            resetFilters = function () {
+                originalResetFilters();
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.value = '';
+                    searchQuery = '';
+                }
+                document.getElementById('searchResultsCount').classList.add('hidden');
+            };
             // Page size change handler
             document.getElementById('pageSizeSelect').addEventListener('change', (e) => {
                 pageSize = parseInt(e.target.value);
