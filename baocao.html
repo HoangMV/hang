@@ -983,81 +983,130 @@
         // Add these variables at the top with other variables
         let searchQuery = '';
 
-        // Add this function to handle search
+        // Hàm xử lý tìm kiếm riêng biệt
         function handleSearch(query) {
             searchQuery = query.toLowerCase().trim();
-            applyFilters();
-        }
 
-        // Update the applyFilters function
-        function applyFilters() {
-            // Get filter values
+            // Luôn tìm kiếm trên dữ liệu gốc đã được lọc bởi các bộ lọc khác
+            let baseData = [...currentData];
+
+            // Áp dụng các bộ lọc hiện tại
             const statusFilter = document.getElementById('statusFilter').value;
-            const searchResultsCount = document.getElementById('searchResultsCount');
-            const searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
 
-            // Filter the data
-            filteredData = currentData.filter(item => {
-                let matchesFilters = true;
-
-                // Date range filter
-                if (currentDateRange.start && currentDateRange.end) {
+            // Áp dụng bộ lọc ngày
+            if (currentDateRange.start && currentDateRange.end) {
+                baseData = baseData.filter(item => {
                     const itemDate = new Date(item.Ngay_nhap);
-                    matchesFilters = matchesFilters &&
-                        itemDate >= currentDateRange.start &&
-                        itemDate <= currentDateRange.end;
-                }
+                    return itemDate >= currentDateRange.start && itemDate <= currentDateRange.end;
+                });
+            }
 
-                // Status filter
-                if (statusFilter !== 'all') {
-                    matchesFilters = matchesFilters && item.trang_thai === statusFilter;
-                }
+            // Áp dụng bộ lọc trạng thái
+            if (statusFilter !== 'all') {
+                baseData = baseData.filter(item => item.trang_thai === statusFilter);
+            }
 
-                // Price filter
-                if (selectedPrices.size > 0) {
-                    matchesFilters = matchesFilters && selectedPrices.has(item.gia);
-                }
+            // Áp dụng bộ lọc giá
+            if (selectedPrices.size > 0) {
+                baseData = baseData.filter(item => selectedPrices.has(item.gia));
+            }
 
-                // Search filter
-                if (searchQuery) {
-                    const matchesSearch = (
-                        (item.ten_chi_tiet || '').toLowerCase().includes(searchQuery) ||
-                        (item.order_kd || '').toLowerCase().includes(searchQuery) ||
-                        (item.so_file || '').toString().toLowerCase().includes(searchQuery) ||
-                        (item.so_goi || '').toString().toLowerCase().includes(searchQuery) ||
-                        (item.ten_thung || '').toLowerCase().includes(searchQuery) ||
-                        (item.code || '').toLowerCase().includes(searchQuery)
-                    );
-                    matchesFilters = matchesFilters && matchesSearch;
-                }
+            // Áp dụng tìm kiếm trên dữ liệu đã lọc
+            let searchResults = baseData;
+            if (searchQuery) {
+                searchResults = baseData.filter(item =>
+                    (item.ten_chi_tiet || '').toLowerCase().includes(searchQuery) ||
+                    (item.order_kd || '').toLowerCase().includes(searchQuery) ||
+                    (item.so_file || '').toString().toLowerCase().includes(searchQuery) ||
+                    (item.so_goi || '').toString().toLowerCase().includes(searchQuery) ||
+                    (item.ten_thung || '').toLowerCase().includes(searchQuery) ||
+                    (item.code || '').toLowerCase().includes(searchQuery)
+                );
+            }
 
-                return matchesFilters;
-            });
-
-            // Update search results count
+            // Cập nhật UI với kết quả tìm kiếm
+            const searchResultsCount = document.getElementById('searchResultsCount');
             if (searchQuery) {
                 searchResultsCount.classList.remove('hidden');
-                searchResultsCount.querySelector('span').textContent = filteredData.length;
+                searchResultsCount.querySelector('span').textContent = searchResults.length;
             } else {
                 searchResultsCount.classList.add('hidden');
             }
 
-            // Reset to first page
+            // Cập nhật table với kết quả tìm kiếm
+            filteredData = searchResults;
             currentPage = 1;
-
-            // Update UI
             updateTable();
             updateStatistics(filteredData);
+        }
 
-            // Close filter panel after applying filters
-            const filterPanel = document.getElementById('filterPanel');
-            if (!filterPanel.classList.contains('hidden')) {
-                toggleFilter();
+        // Hàm áp dụng bộ lọc (không bao gồm tìm kiếm)
+        function applyFilters() {
+            // Get filter values
+            const statusFilter = document.getElementById('statusFilter').value;
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            // Bắt đầu từ currentData
+            let tempFilteredData = [...currentData];
+
+            // Áp dụng các bộ lọc theo thứ tự
+            if (currentDateRange.start && currentDateRange.end) {
+                tempFilteredData = tempFilteredData.filter(item => {
+                    const itemDate = new Date(item.Ngay_nhap);
+                    return itemDate >= currentDateRange.start && itemDate <= currentDateRange.end;
+                });
             }
 
-            // Show notification
-            showNotification('Đã áp dụng bộ lọc');
+            // Status filter
+            if (statusFilter !== 'all') {
+                tempFilteredData = tempFilteredData.filter(item => item.trang_thai === statusFilter);
+            }
+
+            // Price filter
+            if (selectedPrices.size > 0) {
+                tempFilteredData = tempFilteredData.filter(item => selectedPrices.has(item.gia));
+            }
+
+            // Cập nhật filteredData
+            filteredData = tempFilteredData;
+
+            // Áp dụng lại tìm kiếm nếu có
+            if (searchQuery) {
+                handleSearch(searchQuery);
+            } else {
+                // Reset to first page và cập nhật UI
+                currentPage = 1;
+                updateTable();
+                updateStatistics(filteredData);
+            }
+
+            // Đóng filter panel sau khi áp dụng
+            const panel = document.getElementById('filterPanel');
+            const overlay = document.getElementById('filterOverlay');
+            panel.classList.add('hidden');
+            if (overlay) {
+                overlay.remove();
+            }
         }
+
+        // Khởi tạo search input với debounce
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('searchInput');
+            let searchTimeout;
+
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    handleSearch(e.target.value);
+                }, 300);
+            });
+        });
+
+        // Cập nhật document ready để loại bỏ click outside handler
+        document.addEventListener('DOMContentLoaded', () => {
+            // Remove any existing click outside handlers
+            document.removeEventListener('click', handleClickOutside);
+        });
 
         function resetFilters() {
             // Reset date range and remove active class from preset buttons
