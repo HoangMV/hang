@@ -223,6 +223,39 @@
         #statisticsDashboard {
             margin-top: 1rem;
         }
+
+        .table-header {
+            background-color: #F3F4F6;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        .table-header:hover {
+            background-color: #E5E7EB;
+        }
+
+        .sort-icon {
+            display: inline-block;
+            margin-left: 4px;
+            font-size: 12px;
+        }
+
+        .sort-icon::after {
+            content: '↕️';
+        }
+
+        .sort-asc .sort-icon::after {
+            content: '↑';
+        }
+
+        .sort-desc .sort-icon::after {
+            content: '↓';
+        }
+
+        .table-header.active {
+            background-color: #E5E7EB;
+        }
     </style>
 </head>
 
@@ -481,64 +514,92 @@
                 <table class="w-full min-w-[1200px] table-bordered">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th
-                                class="resizable sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                                Order KD
+                            <th class="table-header resizable sticky top-0 px-1 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-300"
+                                data-sort="order_kd">
+                                <div class="flex items-center">
+                                    ORDER KD
+                                    <span class="sort-icon ml-1"></span>
+                                </div>
                                 <div class="resizer" data-column="order_kd"></div>
                             </th>
-                            <th
-                                class="resizable sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                                Tên chi tiết
+                            <th class="table-header resizable sticky top-0 px-1 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-300"
+                                data-sort="ten_chi_tiet">
+                                <div class="flex items-center">
+                                    TÊN CHI TIẾT
+                                    <span class="sort-icon ml-1"></span>
+                                </div>
                                 <div class="resizer" data-column="ten_chi_tiet"></div>
                             </th>
-                            <th
-                                class="resizable sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                                Số file
+                            <th class="table-header resizable sticky top-0 px-2 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-300"
+                                data-sort="so_file">
+                                <div class="flex items-center">
+                                    SỐ FILE
+                                    <span class="sort-icon ml-1"></span>
+                                </div>
                                 <div class="resizer" data-column="so_file"></div>
                             </th>
-                            <th
-                                class="resizable sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                                SLL
+                            <th class="table-header resizable sticky top-0 px-2 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-300"
+                                data-sort="sll">
+                                <div class="flex items-center">
+                                    SLL
+                                    <span class="sort-icon ml-1"></span>
+                                </div>
                                 <div class="resizer" data-column="sll"></div>
                             </th>
-                            <th
-                                class="resizable sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                                Số gói
+                            <th class="table-header resizable sticky top-0 px-2 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-300"
+                                data-sort="so_goi">
+                                <div class="flex items-center">
+                                    SỐ GÓI
+                                    <span class="sort-icon ml-1"></span>
+                                </div>
                                 <div class="resizer" data-column="so_goi"></div>
                             </th>
-                            <th
-                                class="resizable sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                                Thời hạn
+                            <th class="table-header resizable sticky top-0 px-2 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-300"
+                                data-sort="thoi_han">
+                                <div class="flex items-center">
+                                    THỜI HẠN
+                                    <span class="sort-icon ml-1"></span>
+                                </div>
                                 <div class="resizer" data-column="thoi_han"></div>
                             </th>
-                            <th
-                                class="resizable sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                                Ngày nhập
+                            <th class="table-header resizable sticky top-0 px-2 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-300"
+                                data-sort="ngay_nhap">
+                                <div class="flex items-center">
+                                    NGÀY NHẬP
+                                    <span class="sort-icon ml-1"></span>
+                                </div>
                                 <div class="resizer" data-column="ngay_nhap"></div>
                             </th>
-                            <th
-                                class="resizable fixed-width sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                                Tên thùng
+                            <th class="table-header resizable fixed-width sticky top-0 px-2 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-300"
+                                data-sort="ten_thung">
+                                <div class="flex items-center">
+                                    TÊN THÙNG
+                                    <span class="sort-icon ml-1"></span>
+                                </div>
                                 <div class="resizer" data-column="ten_thung"></div>
                             </th>
-                            <th
-                                class="resizable sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 hidden">
-                                Giá
-                                <div class="resizer" data-column="gia"></div>
-                            </th>
-                            <th
-                                class="resizable sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                                Ngày xuất
+                            <th class="table-header resizable sticky top-0 px-2 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-300"
+                                data-sort="ngay_xuat">
+                                <div class="flex items-center">
+                                    NGÀY XUẤT
+                                    <span class="sort-icon ml-1"></span>
+                                </div>
                                 <div class="resizer" data-column="ngay_xuat"></div>
                             </th>
-                            <th
-                                class="resizable sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                                Người tạo
+                            <th class="table-header resizable sticky top-0 px-2 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-300"
+                                data-sort="code">
+                                <div class="flex items-center">
+                                    NGƯỜI TẠO
+                                    <span class="sort-icon ml-1"></span>
+                                </div>
                                 <div class="resizer" data-column="code"></div>
                             </th>
-                            <th
-                                class="resizable sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                                Trạng thái
+                            <th class="table-header resizable sticky top-0 px-2 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-300"
+                                data-sort="trang_thai">
+                                <div class="flex items-center">
+                                    TRẠNG THÁI
+                                    <span class="sort-icon ml-1"></span>
+                                </div>
                                 <div class="resizer" data-column="trang_thai"></div>
                             </th>
                         </tr>
@@ -891,7 +952,14 @@
         // Cập nhật hàm populatePriceFilter
         function populatePriceFilter() {
             const priceOptions = document.getElementById('priceOptions');
-            const uniquePrices = [...new Set(currentData.map(item => item.gia))].filter(Boolean).sort();
+            const uniquePrices = [...new Set(currentData.map(item => item.gia))]
+                .filter(Boolean)
+                .sort((a, b) => {
+                    // Trích xuất số từ chuỗi "Giá X"
+                    const numA = parseInt(a.replace('Giá ', ''));
+                    const numB = parseInt(b.replace('Giá ', ''));
+                    return numA - numB;
+                });
 
             // Tạo các checkbox cho từng giá
             priceOptions.innerHTML = uniquePrices.map(price => `
@@ -902,7 +970,6 @@
         </div>
     `).join('');
 
-            // Thêm các event listeners
             setupPriceFilterEvents();
         }
 
@@ -1535,6 +1602,72 @@
             initializeResizers();
         });
 
+        // Thêm logic xử lý sort
+        let currentSort = {
+            column: null,
+            direction: 'asc'
+        };
+
+        function initializeSort() {
+            const headers = document.querySelectorAll('.table-header');
+            headers.forEach(header => {
+                header.addEventListener('click', () => {
+                    const column = header.dataset.sort;
+
+                    // Reset all headers
+                    headers.forEach(h => {
+                        h.classList.remove('sort-asc', 'sort-desc');
+                    });
+
+                    if (currentSort.column === column) {
+                        // Toggle direction if clicking same column
+                        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        // New column, default to ascending
+                        currentSort.column = column;
+                        currentSort.direction = 'asc';
+                    }
+
+                    // Add sort class
+                    header.classList.add(`sort-${currentSort.direction}`);
+
+                    // Sort the data
+                    sortData();
+                });
+            });
+        }
+
+        function sortData() {
+            if (!currentSort.column) return;
+
+            filteredData.sort((a, b) => {
+                let valueA = a[currentSort.column] || '';
+                let valueB = b[currentSort.column] || '';
+
+                // Handle numeric columns
+                if (['so_file', 'sll', 'so_goi'].includes(currentSort.column)) {
+                    valueA = parseFloat(valueA) || 0;
+                    valueB = parseFloat(valueB) || 0;
+                }
+                // Handle date columns
+                else if (['ngay_nhap', 'ngay_xuat'].includes(currentSort.column)) {
+                    valueA = valueA ? new Date(valueA) : new Date(0);
+                    valueB = valueB ? new Date(valueB) : new Date(0);
+                }
+                // Handle string columns
+                else {
+                    valueA = valueA.toString().toLowerCase();
+                    valueB = valueB.toString().toLowerCase();
+                }
+
+                if (valueA < valueB) return currentSort.direction === 'asc' ? -1 : 1;
+                if (valueA > valueB) return currentSort.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            updateTable();
+        }
+
         function initializePage() {
             // Khởi tạo các giá trị mặc định
             currentPage = 1;
@@ -1548,6 +1681,7 @@
 
             // Cập nhật thống kê ban đầu
             updateStatistics(currentData);
+            initializeSort();
         }
 
         // Data fetching
