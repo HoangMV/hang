@@ -495,7 +495,7 @@
                 <div id="totalQuantity" class="text-2xl font-bold mt-1">0</div>
             </div>
             <div class="stat-card rounded-xl p-4 text-white shadow-lg">
-                <div class="text-sm font-medium opacity-90">Tổng nhập</div>
+                <div class="text-sm font-medium opacity-90">Tổng đơn hàng</div>
                 <div id="totalImport" class="text-2xl font-bold mt-1">0</div>
             </div>
             <div class="stat-card rounded-xl p-4 text-white shadow-lg">
@@ -766,8 +766,8 @@
             switch (preset) {
                 case 'today':
                     return {
-                        start: today,
-                        end: now
+                        start: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0),
+                        end: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59)
                     };
                 case 'yesterday': {
                     const yesterday = new Date(today);
@@ -873,20 +873,7 @@
             const stats = {
                 totalProducts: new Set(data.map(item => item.ten_chi_tiet)).size,
                 totalQuantity: data.reduce((sum, item) => sum + (parseInt(item.sll) || 0), 0),
-                totalImport: data.reduce((sum, item) => {
-                    const ngayNhan = item.Ngay_nhap ? new Date(item.Ngay_nhap) : null;
-
-                    // Nếu có thời gian được chọn thì lọc theo thời gian
-                    if (currentDateRange.start && currentDateRange.end && ngayNhan) {
-                        if (ngayNhan >= currentDateRange.start && ngayNhan <= currentDateRange.end) {
-                            return sum + (parseInt(item.sll) || 0);
-                        }
-                        return sum;
-                    }
-
-                    // Nếu không có thời gian được chọn thì tính tất cả
-                    return sum + (parseInt(item.sll) || 0);
-                }, 0),
+                totalImport: new Set(data.map(item => item.order_kd)).size,
                 totalExport: data.reduce((sum, item) => {
                     if (item.so_bien_ban_xuat && item.trang_thai === 'Đã xuất') {
                         return sum + (parseInt(item.sll) || 0);
@@ -1120,7 +1107,13 @@
             if (currentDateRange.start && currentDateRange.end) {
                 tempFilteredData = tempFilteredData.filter(item => {
                     const itemDate = new Date(item.Ngay_nhap);
-                    return itemDate >= currentDateRange.start && itemDate <= currentDateRange.end;
+                    // Set thời gian cho ngày bắt đầu và kết thúc
+                    const startTime = new Date(currentDateRange.start);
+                    startTime.setHours(0, 0, 0, 0);
+                    const endTime = new Date(currentDateRange.end);
+                    endTime.setHours(23, 59, 59, 999);
+
+                    return itemDate >= startTime && itemDate <= endTime;
                 });
             }
 
@@ -1419,8 +1412,8 @@
                     'Order KD': item.order_kd || '',
                     'Tên chi tiết': item.ten_chi_tiet || '',
                     'Số file': item.so_file || '',
-                    'SLL': item.sll || '',
-                    'Số gói': item.so_goi || '',
+                    'SLL': parseFloat(item.sll) || 0,
+                    'Số gói': parseFloat(item.so_goi) || 0,
                     'Thời hạn': item.thoi_han || '',
                     'BBKT': item.bbkt || '',
                     'Dấu bản vẽ': item.dong_dau_ban_ve || '',
@@ -1444,34 +1437,42 @@
 
                 const ws1 = XLSX.utils.json_to_sheet(warehouseData);
 
+                // Set number format for specific columns in Sheet 1
+                const numericColumns1 = ['H', 'I']; // H for SLL, I for Số gói
+                numericColumns1.forEach(col => {
+                    const range = XLSX.utils.decode_range(ws1['!ref']);
+                    for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+                        const cell = ws1[`${col}${R + 1}`];
+                        if (cell) {
+                            cell.t = 'n'; // Set cell type to number
+                            cell.z = '#,##0'; // Set number format
+                        }
+                    }
+                });
+
                 // Sheet 2: Tổng hợp đơn hàng đã nhận
                 const receivedOrders = currentData.filter(item => item.trang_thai === 'Đã nhận');
-
-                // Tạo map để đếm và theo dõi vị trí đầu tiên của mỗi ten_chi_tiet
-                const detailCounts = new Map(); // Đếm số lần xuất hiện
-                const firstOccurrence = new Map(); // Lưu vị trí xuất hiện đầu tiên
+                const detailCounts = new Map();
+                const firstOccurrence = new Map();
 
                 receivedOrders.forEach((item, index) => {
                     const count = (detailCounts.get(item.ten_chi_tiet) || 0) + 1;
                     detailCounts.set(item.ten_chi_tiet, count);
-
-                    // Chỉ lưu vị trí đầu tiên
                     if (!firstOccurrence.has(item.ten_chi_tiet)) {
                         firstOccurrence.set(item.ten_chi_tiet, index);
                     }
                 });
 
                 const processedReceivedOrders = receivedOrders.map((item, currentIndex) => {
-                    // Chỉ hiện thị số lượng ở dòng đầu tiên của mỗi ten_chi_tiet
                     const totalCount = detailCounts.get(item.ten_chi_tiet);
                     const isFirstOccurrence = firstOccurrence.get(item.ten_chi_tiet) === currentIndex;
 
                     return {
                         'STT': '',
                         'Tên chi tiết': item.ten_chi_tiet || '',
-                        'Số lượng sản phẩm': item.sll || '',
-                        'Số lượng đơn hàng': isFirstOccurrence ? totalCount.toString() : '',
-                        'Số lượng chi tiết': isFirstOccurrence ? '1' : '',
+                        'Số lượng sản phẩm': parseFloat(item.sll) || 0,
+                        'Số lượng đơn hàng': isFirstOccurrence ? parseInt(totalCount) : 0,
+                        'Số lượng chi tiết': isFirstOccurrence ? 1 : 0,
                         'Ngày nhập': formatDate(item.Ngay_nhap) || ''
                     };
                 });
@@ -1481,6 +1482,19 @@
                 });
 
                 const ws2 = XLSX.utils.json_to_sheet(processedReceivedOrders);
+
+                // Set number format for specific columns in Sheet 2
+                const numericColumns2 = ['C', 'D', 'E']; // C for Số lượng sản phẩm, D for Số lượng đơn hàng, E for Số lượng chi tiết
+                numericColumns2.forEach(col => {
+                    const range = XLSX.utils.decode_range(ws2['!ref']);
+                    for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+                        const cell = ws2[`${col}${R + 1}`];
+                        if (cell) {
+                            cell.t = 'n'; // Set cell type to number
+                            cell.z = '#,##0'; // Set number format
+                        }
+                    }
+                });
 
                 // Sheet 3: Thống kê theo tháng
                 const monthlyStats = {};
@@ -1506,12 +1520,25 @@
 
                 const monthlyData = Object.values(monthlyStats).map(stat => ({
                     'Tháng': stat['Tháng'],
-                    'Tổng số lượng': stat['Tổng số lượng'],
-                    'Số đơn hàng': stat['Số đơn hàng'],
-                    'Số chi tiết': stat['Số chi tiết'].size
+                    'Tổng số lượng': parseInt(stat['Tổng số lượng']),
+                    'Số đơn hàng': parseInt(stat['Số đơn hàng']),
+                    'Số chi tiết': parseInt(stat['Số chi tiết'].size)
                 }));
 
                 const ws3 = XLSX.utils.json_to_sheet(monthlyData);
+
+                // Set number format for numeric columns in Sheet 3
+                const numericColumns3 = ['B', 'C', 'D']; // B for Tổng số lượng, C for Số đơn hàng, D for Số chi tiết
+                numericColumns3.forEach(col => {
+                    const range = XLSX.utils.decode_range(ws3['!ref']);
+                    for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+                        const cell = ws3[`${col}${R + 1}`];
+                        if (cell) {
+                            cell.t = 'n'; // Set cell type to number
+                            cell.z = '#,##0'; // Set number format
+                        }
+                    }
+                });
 
                 // Add sheets to workbook
                 XLSX.utils.book_append_sheet(wb, ws1, 'Tổng hợp kho');
